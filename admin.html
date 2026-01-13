@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Xamplore</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-slate-900 text-white min-h-screen">
+    <nav class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+        <div class="font-bold text-xl tracking-tight">Xamplore <span
+                class="text-blue-500 text-sm uppercase tracking-wide ml-2">Admin</span></div>
+        <a href="/api/auth/logout" class="text-sm text-slate-400 hover:text-white transition-colors">Logout</a>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6">
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 class="text-slate-400 text-sm font-medium mb-1">Active Students</h3>
+                <div class="text-3xl font-bold" id="statStudents">-</div>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 class="text-slate-400 text-sm font-medium mb-1">Attempts</h3>
+                <div class="text-3xl font-bold" id="statAttempts">-</div>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 class="text-slate-400 text-sm font-medium mb-1">Completed</h3>
+                <div class="text-3xl font-bold text-green-400" id="statCompleted">-</div>
+            </div>
+        </div>
+
+        <!-- Create Test Form -->
+        <section class="bg-slate-800 rounded-xl border border-slate-700 p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Create New Test</h2>
+            <form id="createTestForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" name="title" placeholder="Test Title" required
+                        class="bg-slate-900 border border-slate-600 rounded p-2 text-white">
+                    <input type="text" name="pattern" placeholder="Pattern (A/B)" required
+                        class="bg-slate-900 border border-slate-600 rounded p-2 text-white">
+                    <input type="number" name="duration" placeholder="Duration (mins)" required
+                        class="bg-slate-900 border border-slate-600 rounded p-2 text-white">
+                </div>
+                <textarea name="questions"
+                    placeholder='Questions JSON (e.g. [{"id":1, "text":"Q1?", "options":["A","B"], "type":"mcq", "correctAnswer":"A"}])'
+                    class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white h-32 font-mono text-sm"
+                    required></textarea>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded font-bold">Create
+                    Test</button>
+            </form>
+        </section>
+
+    </main>
+
+    <script>
+        // Init Stats
+        fetch('/api/admin/stats').then(r => r.json()).then(data => {
+            if (data.stats) {
+                document.getElementById('statStudents').textContent = data.stats.students;
+                document.getElementById('statAttempts').textContent = data.stats.attempts;
+                document.getElementById('statCompleted').textContent = data.stats.completed;
+            }
+        });
+
+        // Create Test
+        document.getElementById('createTestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                // Parse questions JSON
+                data.questions = JSON.parse(data.questions);
+                data.duration = parseInt(data.duration);
+
+                const res = await fetch('/api/admin/tests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const json = await res.json();
+                if (json.success) {
+                    alert('Test Created!');
+                    e.target.reset();
+                } else {
+                    alert('Error: ' + json.error);
+                }
+            } catch (err) {
+                alert('Invalid JSON in questions or Network Error');
+            }
+        });
+    </script>
+</body>
+
+</html>
