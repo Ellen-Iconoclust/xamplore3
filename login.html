@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Xamplore</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-slate-800/50 backdrop-blur-lg border border-slate-700 p-8 rounded-2xl shadow-2xl">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold mb-2">Welcome Back</h2>
+            <p class="text-slate-400">Sign in to continue to your dashboard</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label for="student_id" class="block text-sm font-medium text-slate-300 mb-2">Student ID</label>
+                <input type="text" id="student_id" name="student_id" required
+                    class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-600 text-white"
+                    placeholder="Enter your ID">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                <input type="password" id="password" name="password" required
+                    class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-600 text-white"
+                    placeholder="Enter your password">
+            </div>
+
+            <button type="submit"
+                class="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg font-bold hover:shadow-lg hover:shadow-blue-500/25 transition-all transform active:scale-95">
+                Sign In
+            </button>
+
+            <p id="errorMessage" class="text-red-400 text-center text-sm hidden mt-4"></p>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const student_id = document.getElementById('student_id').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMessage');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    errorMsg.textContent = data.error || 'Login failed';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>
