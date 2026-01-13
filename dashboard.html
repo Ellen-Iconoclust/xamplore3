@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Xamplore</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Auth Check
+        fetch('/api/auth/session').then(res => {
+            if (res.status !== 200) window.location.href = '/login.html';
+            return res.json();
+        }).then(data => {
+            document.getElementById('userName').textContent = data.user.name || data.user.id;
+        });
+    </script>
+</head>
+
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+    <nav class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm">
+        <div class="font-bold text-xl text-blue-600">Xamplore</div>
+        <div class="flex items-center gap-4">
+            <span id="userName" class="font-medium text-slate-700">Student</span>
+            <a href="/api/auth/logout" class="text-sm text-red-500 hover:text-red-700">Logout</a>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-6">Available Tests</h1>
+
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3" id="testsContainer">
+            <!-- Loading State -->
+            <p class="text-slate-500">Loading tests...</p>
+        </div>
+    </main>
+
+    <script>
+        async function loadTests() {
+            try {
+                const res = await fetch('/api/exam/tests');
+                const data = await res.json();
+
+                const container = document.getElementById('testsContainer');
+                container.innerHTML = '';
+
+                if (data.tests.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500">No active tests available.</p>';
+                    return;
+                }
+
+                data.tests.forEach(test => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-all';
+                    card.innerHTML = `
+                        <div class="h-2 w-12 bg-blue-500 rounded-full mb-4"></div>
+                        <h3 class="font-bold text-lg mb-2">${test.title}</h3>
+                        <p class="text-slate-500 text-sm mb-4">Pattern: ${test.pattern} • ${test.duration} mins</p>
+                        <button onclick="startTest('${test.id}')" class="w-full py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors">
+                            Start Exam
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function startTest(testId) {
+            try {
+                const res = await fetch(`/api/exam/${testId}/start`, { method: 'POST' });
+                const data = await res.json();
+
+                if (data.success) {
+                    window.location.href = `/exam.html?id=${testId}&attempt=${data.attemptId}`;
+                } else {
+                    alert('Error starting test: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error');
+            }
+        }
+
+        loadTests();
+    </script>
+</body>
+
+</html>
